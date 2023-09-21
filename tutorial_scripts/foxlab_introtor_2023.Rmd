@@ -12,8 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Overview
 This document is designed to provide an introduction to using R for basic data
 manipulation, visualization and analyses. This document assumes the user knows
-the basics of R and RStudio. For more information about setting-up R, please see
-https://github.com/auv27/intro_to_r/tree/main/getting_started.
+how to set-up R. Mor information about setting-up are can be found [here](https://github.com/auv27/intro_to_r/tree/main/getting_started).
 
 This document is known as an RMarkdown. RMarkdown is a useful tool for 
 integrating text and code. It is also possible to use basic r scripts to conduct
@@ -27,10 +26,10 @@ choice of what to install so just be cognizant. If you do not want to install
 everything, you can use `install.packages()` to install individual packages and
 `library()` to load individual packages.
 
-In the call below, I load tidyverse which is a package containing a family of 
-packages (see the following website to learn more about tidyverse 
-https://www.tidyverse.org/). For this script, I am using the following tidyverse
-packages: tidyr, dplyr, ggplot2. I will also use the psych and Hmisc packages.
+In the call below, I load [tidyverse](https://www.tidyverse.org/) which is a 
+package containing a family of packages. For this script, I am using the 
+following tidyverse packages: stringr, tidyr, dplyr, ggplot2. I will also use 
+the psych and Hmisc packages.
 ```{r}
 if (!("pacman" %in% installed.packages()[,])) {
     install.packages("pacman")
@@ -41,15 +40,39 @@ pacman::p_load(tidyverse, psych, Hmisc)
 
 # Setting up an environment
 There are a few different ways to set-up an environment for manipulating,
-analyzing and visualizing data in R. Some people like to use "projects" (see
-the following website for information about projects in RStudio https://bookdown.org/daniel_dauber_io/r4np_book/starting-your-r-projects.html).
-Others prefer to use the setwd() function to specify a path that R should refer
-to for all processes (see the following website for an explanation https://finnstats.com/2021/12/30/get-and-set-working-directory-setwd-getwd-in-r/).
+analyzing and visualizing data in R. Some people like to use [projects](https://bookdown.org/daniel_dauber_io/r4np_book/starting-your-r-projects.html).
+Others prefer to use [the setwd() function](https://finnstats.com/2021/12/30/get-and-set-working-directory-setwd-getwd-in-r/).
 I prefer to use relative paths because of the flexibility it affords, but there
-is not right or wrong way to set-up an environment. Just choose what works best
+is no right or wrong way to set-up an environment. Just choose what works best
 for you.
 ```{r}
-# Set home path for the session 
-home_path <- "/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r"
+# Set home path - level that contains all needed folders 
+## Using the str_wrap() function from stringr just to make the path readable
+## You would need to adjust this path to match the location you want
+home_path <- str_wrap("/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r")
+
+# Set data path 
+data_path <- file.path(home_path,"/tutorial_data/candy_data.csv", fsep = "")
+
+# Set ouput path
+output_path <- file.path(home_path,"/tutorial_output", fsep = "")
 ```
 
+
+# Reading in data
+Today we only have one data file to read in which is relatively straightforward.
+Reading in multiple files (such as reading in separate behavioral task files for
+every individual participant) is a more advanced concept that I am happy to 
+discuss individually or in a future tutorial.
+
+The data for today are drawn from the 539 article 
+["The Ultimate Halloween Candy Power Ranking"](https://fivethirtyeight.com/videos/the-ultimate-halloween-candy-power-ranking/).
+You can learn more about the data set [here](https://github.com/fivethirtyeight/data/tree/master/candy-power-ranking).
+```{r}
+# Read-in the data
+candy_df <- read.csv(data_path)
+```
+<div style="text-align: left;">
+  <p><strong>Variable definitions as provided by 539</strong></p>
+  <img src="/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r/tutorial_scripts/tutorial_images/candy_variable_definitions.png" alt="Alt Text" />
+</div>
