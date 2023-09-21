@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Overview
 This document is designed to provide an introduction to using R for basic data
 manipulation, visualization and analyses. This document assumes the user knows
-how to set-up R. Mor information about setting-up are can be found [here](https://github.com/auv27/intro_to_r/tree/main/getting_started).
+how to set-up R. More information about setting-up are can be found [here](https://github.com/auv27/intro_to_r/tree/main/getting_started).
 
 This document is known as an RMarkdown. RMarkdown is a useful tool for 
 integrating text and code. It is also possible to use basic r scripts to conduct
@@ -41,7 +41,9 @@ pacman::p_load(tidyverse, psych, Hmisc)
 # Setting up an environment
 There are a few different ways to set-up an environment for manipulating,
 analyzing and visualizing data in R. Some people like to use [projects](https://bookdown.org/daniel_dauber_io/r4np_book/starting-your-r-projects.html).
-Others prefer to use [the setwd() function](https://finnstats.com/2021/12/30/get-and-set-working-directory-setwd-getwd-in-r/).
+Others prefer to [set a working directory](https://finnstats.com/2021/12/30/get-and-set-working-directory-setwd-getwd-in-r/)
+using `setwd()`.
+
 I prefer to use relative paths because of the flexibility it affords, but there
 is no right or wrong way to set-up an environment. Just choose what works best
 for you.
@@ -63,7 +65,8 @@ output_path <- file.path(home_path,"/tutorial_output", fsep = "")
 Today we only have one data file to read in which is relatively straightforward.
 Reading in multiple files (such as reading in separate behavioral task files for
 every individual participant) is a more advanced concept that I am happy to 
-discuss individually or in a future tutorial.
+discuss individually or in a future tutorial. Merging 1 or 2 data sets is also a 
+concept I'm happy to discuss individually or in a future tutorial.
 
 The data for today are drawn from the 539 article 
 ["The Ultimate Halloween Candy Power Ranking"](https://fivethirtyeight.com/videos/the-ultimate-halloween-candy-power-ranking/).
@@ -76,3 +79,77 @@ candy_df <- read.csv(data_path)
   <p><strong>Variable definitions as provided by 539</strong></p>
   <img src="/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r/tutorial_scripts/tutorial_images/candy_variable_definitions.png" alt="Alt Text" />
 </div>
+For binary variables 1 = yes and 0 = no
+
+# Looking at your data
+Once you have read-in a data set, you can click on it in the "environment" tab
+and a new window will appear. You can also check your data in script. R users
+commonly refer to a read-in data set as a "data.frame" (hence the use of df to 
+commonly label data.frames). You can use the `head()` function to observe the 
+first few rows of your data.frame and the `str()` function to observe variable
+types contained in your data.frame.
+```{r}
+# Observe the first few rows of your data.frame
+head(candy_df)
+
+# Observe the structure of your data.frame
+str(candy_df)
+```
+
+
+# Manipulating your data
+We can see from the `str()` function that the data read-in the binary variables
+as integers, but we actually know they are factors. Although maybe we also think
+that having more candy attributes might be related to some of our other variables,
+such as how winning the candy was. Or maybe we think that candy that contains 
+chocolate will have higher average win percentages than candy without chocolate.
+We can use tidyverse functions to prepare the data to ask these questions.
+
+First, lets create a variable that adds all the possible candy attributes 
+together for each candy. We will use the `rowwise()` and `mutate()` functions 
+which comes from the [dplyr](https://dplyr.tidyverse.org/index.html) package. 
+```{r}
+# Sum candy attributes
+candy_df <- candy_df |>
+  ## rowwise() tells the data.frame to calculate by rows
+  rowwise() |>
+  ## mutate() allows you to flexibly manipulate data
+  mutate(candyattributesum = sum(across(2:10))) |>
+  ## as_data_frame() returns the data from rowwise to data.frame format
+  as_data_frame()
+
+# Observe new variable
+## select(), also from dplyr, let's you choose particular variables 
+head(candy_df |> select(competitorname, candyattributesum))
+```
+
+Great! We see we created a new variable that sums candy attributes. What if we 
+want to create winning averages based on candy features? For simplicity, let's
+look at chocolate vs fruity candies. I am going to create a new data.frame that
+focuses on those two candy types using `filter()` from dplyr.
+```{r}
+# Create average winning scores
+candy_chocolateevsfruity_df <- candy_df |>
+  # This tells the data.frame to keep candy labeled as chocolate or fruity
+  filter(chocolate == 1 | fruity == 1) |>
+  # Creating a new variable to label the groups
+  mutate(type = ifelse(chocolate == 1, 1,
+                       ifelse(fruity == 1, 2, NA))) |>
+  select(competitorname, type, winpercent) 
+
+# Observe resulting data.frame
+head(candy_chocolateevsfruity_df)
+```
+
+Next, I am going to use `group_by()` from dplyr to find the averaage win percent
+for chocolate vs fruity candy.
+```{r}
+candy_chocolateevsfruity_df <- candy_chocolateevsfruity_df |>
+  group_by(type) |>
+  mutate(averagewinpercent = mean(winpercent)) |>
+  select(competitorname, type, averagewinpercent)
+
+# Observe resulting data.frame
+head(candy_chocolateevsfruity_df)
+```
+
