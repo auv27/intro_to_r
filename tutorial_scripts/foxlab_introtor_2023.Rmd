@@ -51,13 +51,10 @@ for you.
 # Set home path - level that contains all needed folders 
 ## Using the str_wrap() function from stringr just to make the path readable
 ## You would need to adjust this path to match the location you want
-home_path <- str_wrap("/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r")
+home_path <- "/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r"
 
 # Set data path 
 data_path <- file.path(home_path,"/tutorial_data/candy_data.csv", fsep = "")
-
-# Set ouput path
-output_path <- file.path(home_path,"/tutorial_output", fsep = "")
 ```
 
 I personally always like to preset my visualization enviroment by sourcing in 
@@ -124,7 +121,7 @@ candy_df <- candy_df |>
   ## mutate() allows you to flexibly manipulate data
   mutate(candyattributesum = sum(across(2:10))) |>
   ## as_data_frame() returns the data from rowwise to data.frame format
-  as_data_frame()
+  as.data.frame()
 
 # Observe new variable
 ## select(), also from dplyr, let's you choose particular variables 
@@ -162,7 +159,7 @@ head(candy_chocolatevsfruity_df)
 ```
 
 
-# Analyzing and visulaizing your data
+# Analyzing and visualizing your data
 We now have two data.frames ready for different analyses. Let's start by 
 checking our descriptive statistics. I am going to use the `describe()` function
 from the psych package.
@@ -251,29 +248,35 @@ ggplot(candy_chocolatevsfruitysummary_df, aes(type, winpercent, fill = type)) +
                 aes(ymin=winpercent-se, 
                     ymax=winpercent+se)) +
   scale_fill_viridis_d(begin = .2, end = .8)  
-
-
-
-
-
-+
-  labs(x = "", y = "Proportion Negative Affect", fill = "Interaction") +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
 ```
 
 Maybe we decide this is the story we really want to tell: the superiority of 
 chocolate vs fruity candies. We can dress up this figure to make it publication
-ready by adding more infomative lables.
+ready by adding more informative labels.
 ```{r}
-ggplot(candy_chocolatevsfruitysummary_df, aes(type, winpercent, fill = type)) +
+candy_figure <- ggplot(candy_chocolatevsfruitysummary_df, 
+                       aes(type, winpercent, fill = type)) +
   geom_bar(stat = "summary", fun = "mean") +
   geom_errorbar(position = position_dodge(.9), width = .1, 
                 aes(ymin=winpercent-se, 
                     ymax=winpercent+se)) +
-  scale_fill_viridis_d(begin = .2, end = .8) +
+  scale_fill_viridis_d(begin = .2, end = .8, labels = c("Chocolate", "Fruity")) +
   labs(x = "", y = "Win Percent", fill = "Candy Type") +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
+
+candy_figure
 ```
 
+Now we can export this figure for publication!
+```{r}
+out_path <- file.path(home_path,"/tutorial_output/candy_figure.png", fsep ="")
+ggsave(out_path, plot = candy_figure, width = 6, height = 4, dpi = 300)
+```
+
+# Summary
+This was a very speedy run through of some of the things you can do with R. 
+However, often issues with data, analyses and visualization end up being much
+more complicated than what we did today. We can look at more advanced topics on
+a case-by-case basis or in future tutorials which could cover topics like 
+manipulating and analyzing longitudinal data, visualizing interactions, etc.
