@@ -34,7 +34,7 @@ the psych and Hmisc packages.
 if (!("pacman" %in% installed.packages()[,])) {
     install.packages("pacman")
   }
-pacman::p_load(tidyverse, psych, Hmisc)
+pacman::p_load(tidyverse, psych, Hmisc, GGally, viridis)
 ```
 
 
@@ -60,6 +60,13 @@ data_path <- file.path(home_path,"/tutorial_data/candy_data.csv", fsep = "")
 output_path <- file.path(home_path,"/tutorial_output", fsep = "")
 ```
 
+I personally always like to preset my visualization enviroment by sourcing in 
+a visualization theme for all my plots.
+```{r}
+source("/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/visualization_tools/basic_theme.R")
+theme_set(basic_theme)
+```
+
 
 # Reading in data
 Today we only have one data file to read in which is relatively straightforward.
@@ -80,6 +87,7 @@ candy_df <- read.csv(data_path)
   <img src="/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r/tutorial_scripts/tutorial_images/candy_variable_definitions.png" alt="Alt Text" />
 </div>
 For binary variables 1 = yes and 0 = no
+
 
 # Looking at your data
 Once you have read-in a data set, you can click on it in the "environment" tab
@@ -129,7 +137,7 @@ look at chocolate vs fruity candies. I am going to create a new data.frame that
 focuses on those two candy types using `filter()` from dplyr.
 ```{r}
 # Create average winning scores
-candy_chocolateevsfruity_df <- candy_df |>
+candy_chocolatevsfruity_df <- candy_df |>
   # This tells the data.frame to keep candy labeled as chocolate or fruity
   filter(chocolate == 1 | fruity == 1) |>
   # Creating a new variable to label the groups
@@ -138,18 +146,134 @@ candy_chocolateevsfruity_df <- candy_df |>
   select(competitorname, type, winpercent) 
 
 # Observe resulting data.frame
-head(candy_chocolateevsfruity_df)
+head(candy_chocolatevsfruity_df)
 ```
 
 Next, I am going to use `group_by()` from dplyr to find the averaage win percent
 for chocolate vs fruity candy.
 ```{r}
-candy_chocolateevsfruity_df <- candy_chocolateevsfruity_df |>
+candy_chocolatevsfruity_df <- candy_chocolatevsfruity_df |>
   group_by(type) |>
   mutate(averagewinpercent = mean(winpercent)) |>
-  select(competitorname, type, averagewinpercent)
+  select(competitorname, type, winpercent, averagewinpercent)
 
 # Observe resulting data.frame
-head(candy_chocolateevsfruity_df)
+head(candy_chocolatevsfruity_df)
+```
+
+
+# Analyzing and visulaizing your data
+We now have two data.frames ready for different analyses. Let's start by 
+checking our descriptive statistics. I am going to use the `describe()` function
+from the psych package.
+```{r}
+psych::describe(candy_df |> select(11:14))
+```
+
+We can also get summaries about our chocolate vs fruity groupings. I am using
+the `group_by()` and `summarise()` functions from dplyr
+```{r}
+candy_chocolatevsfruity_df |> 
+  group_by(type) |>
+  summarise(n())
+```
+
+Now let's check the correlations amongst our variables. I am going to use the
+`rcorr()` function from Hmisc.
+```{r}
+rcorr(as.matrix(candy_df |> select(11:14), type = "pearson"))
+```
+
+Our correlations look pretty decent! But it is always preferable to visualize
+correlations. There are a couple way you can do this, but first I will show you
+`ggpairs()` from the GGally package as it is my favorite way to present 
+descriptive data.
+```{r}
+ggpairs(candy_df |> select(11:14), progress = FALSE)
+```
+
+If you really wanted to focus on on particular relation, such as the relation 
+between number of candy attributes and win percentage, you might instead use
+`ggplot()` from the ggplot2 package in tidyverse.
+```{r}
+ggplot(candy_df, aes(sugarpercent, winpercent)) +
+  geom_point()
+```
+
+Maybe now you want to see the line of best fit for the relation.
+```{r}
+ggplot(candy_df, aes(sugarpercent, winpercent)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "black")
+```
+
+Maybe your curious if this relation varies by number of candy attributes.
+```{r}
+ggplot(candy_df, aes(sugarpercent, winpercent)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "black") +
+  facet_wrap(~candyattributesum)
+```
+
+We can run a linear model to see if both sugar percent and candy attributes 
+contribute to win percent.
+```{r}
+lm_nointeraction <- with(candy_df, lm(winpercent ~ sugarpercent + candyattributesum))
+
+summary(lm_nointeraction)
+```
+
+Maybe now you want to know more about our chocolate vs fruity candy question.
+We can run a t-test to see if chocolate or fruity candy has higher win percents.
+```{r}
+with(candy_chocolatevsfruity_df, t.test(winpercent~type))
+```
+
+We can make a bar graph to visulalize this difference. I am going to use the
+Rmisc package to calculate error bars for the figure.
+```{r}
+library(Rmisc)
+candy_chocolatevsfruitysummary_df <- summarySEwithin(candy_chocolatevsfruity_df,
+                           measurevar="winpercent", 
+                           withinvars=c("type"),
+                           #idvar="type", 
+                           na.rm=TRUE, conf.interval=.95)
+detach("package:Rmisc", unload=TRUE)
+```
+
+
+Now I am going to plot the bar graph. When I add color to a graph, I like to
+use the viridis package as it is colorblind friendly.
+```{r}
+ggplot(candy_chocolatevsfruitysummary_df, aes(type, winpercent, fill = type)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  geom_errorbar(position = position_dodge(.9), width = .1, 
+                aes(ymin=winpercent-se, 
+                    ymax=winpercent+se)) +
+  scale_fill_viridis_d(begin = .2, end = .8)  
+
+
+
+
+
++
+  labs(x = "", y = "Proportion Negative Affect", fill = "Interaction") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+Maybe we decide this is the story we really want to tell: the superiority of 
+chocolate vs fruity candies. We can dress up this figure to make it publication
+ready by adding more infomative lables.
+```{r}
+ggplot(candy_chocolatevsfruitysummary_df, aes(type, winpercent, fill = type)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  geom_errorbar(position = position_dodge(.9), width = .1, 
+                aes(ymin=winpercent-se, 
+                    ymax=winpercent+se)) +
+  scale_fill_viridis_d(begin = .2, end = .8) +
+  labs(x = "", y = "Win Percent", fill = "Candy Type") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
 ```
 
