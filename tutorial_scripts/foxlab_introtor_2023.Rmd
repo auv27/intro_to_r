@@ -57,7 +57,7 @@ home_path <- "/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes
 data_path <- file.path(home_path,"/tutorial_data/candy_data.csv", fsep = "")
 ```
 
-I personally always like to preset my visualization enviroment by sourcing in 
+I personally always like to preset my visualization environment by sourcing in 
 a visualization theme for all my plots.
 ```{r}
 source("/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/visualization_tools/basic_theme.R")
@@ -204,7 +204,7 @@ ggplot(candy_df, aes(sugarpercent, winpercent)) +
   geom_smooth(method = "lm", color = "black")
 ```
 
-Maybe your curious if this relation varies by number of candy attributes.
+Maybe you're curious if this relation varies by number of candy attributes.
 ```{r}
 ggplot(candy_df, aes(sugarpercent, winpercent)) +
   geom_point() +
@@ -215,9 +215,9 @@ ggplot(candy_df, aes(sugarpercent, winpercent)) +
 We can run a linear model to see if both sugar percent and candy attributes 
 contribute to win percent.
 ```{r}
-lm_nointeraction <- with(candy_df, lm(winpercent ~ sugarpercent + candyattributesum))
+lm <- with(candy_df, lm(winpercent ~ sugarpercent + candyattributesum))
 
-summary(lm_nointeraction)
+summary(lm)
 ```
 
 Maybe now you want to know more about our chocolate vs fruity candy question.
