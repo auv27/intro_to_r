@@ -180,7 +180,7 @@ We now have two data.frames ready for different analyses. Let's start by
 checking our descriptive statistics. I am going to use the `describe()` function
 from the psych package.
 ```{r}
-psych::describe(candy_df |> select(11:14))
+psych::describe(candy_df |> select(11:13))
 ```
 
 We can also get summaries about our chocolate vs fruity groupings. I am using
@@ -194,7 +194,7 @@ candy_chocolatevsfruity_df |>
 Now let's check the correlations between our variables. I am going to use the
 `rcorr()` function from Hmisc.
 ```{r}
-rcorr(as.matrix(candy_df |> select(11:14), type = "pearson"))
+rcorr(as.matrix(candy_df |> select(11:13), type = "pearson"))
 ```
 
 Our correlations look pretty decent! But it is always preferable to visualize
@@ -202,7 +202,7 @@ correlations. There are a couple way you can do this, but first I will show you
 `ggpairs()` from the GGally package as it is my favorite way to present 
 descriptive data.
 ```{r}
-ggpairs(candy_df |> select(11:14), progress = FALSE)
+ggpairs(candy_df |> select(11:13), progress = FALSE)
 ```
 
 If you really wanted to focus on a particular relation, such as the relation 
