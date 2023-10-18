@@ -27,9 +27,13 @@ everything, you can use `install.packages()` to install individual packages and
 `library()` to load individual packages.
 
 In the call below, I load [tidyverse](https://www.tidyverse.org/) which is a 
-package containing a family of packages. For this script, I am using the 
-following tidyverse packages: stringr, tidyr, dplyr, ggplot2. I will also use 
-the psych and Hmisc packages.
+package containing a family of packages. All Tidyverse packages use a common
+"grammar" for coding and I will use this throughout the script. It is also 
+possible to do many of the same processes I show using base R or other packages,
+but I find Tidyverse the most useful for consistency. For this script, I am 
+using the following tidyverse packages: stringr, tidyr, dplyr, ggplot2. 
+I will also use the psych, Hmisc, GGally and viridis packages which are not
+a part of the Tidyverse but work within the Tidyverse grammar.
 ```{r}
 if (!("pacman" %in% installed.packages()[,])) {
     install.packages("pacman")
@@ -49,7 +53,6 @@ is no right or wrong way to set-up an environment. Just choose what works best
 for you.
 ```{r}
 # Set home path - level that contains all needed folders 
-## Using the str_wrap() function from stringr just to make the path readable
 ## You would need to adjust this path to match the location you want
 home_path <- "/Users/aliciavallorani/Library/CloudStorage/Box-Box/Standard Codes/intro_to_r"
 
@@ -69,8 +72,8 @@ theme_set(basic_theme)
 Today we only have one data file to read in which is relatively straightforward.
 Reading in multiple files (such as reading in separate behavioral task files for
 every individual participant) is a more advanced concept that I am happy to 
-discuss individually or in a future tutorial. Merging 1 or 2 data sets is also a 
-concept I'm happy to discuss individually or in a future tutorial.
+discuss individually or in a future tutorial. Merging 2 or more data sets is 
+also a concept I'm happy to discuss individually or in a future tutorial.
 
 The data for today are drawn from the 539 article 
 ["The Ultimate Halloween Candy Power Ranking"](https://fivethirtyeight.com/videos/the-ultimate-halloween-candy-power-ranking/).
@@ -104,15 +107,28 @@ str(candy_df)
 
 # Manipulating your data
 We can see from the `str()` function that the data read-in the binary variables
-as integers, but we actually know they are factors. Although maybe we also think
-that having more candy attributes might be related to some of our other variables,
-such as how winning the candy was. Or maybe we think that candy that contains 
-chocolate will have higher average win percentages than candy without chocolate.
-We can use tidyverse functions to prepare the data to ask these questions.
+as integers, but we actually know they are factors. We can adjust this using the
+`mutate()` function which comes from the [dplyr](https://dplyr.tidyverse.org/index.html) 
+package.
+```{r}
+# Turn one integer variable into a factor
+candy_df <- candy_df |>
+  mutate(chocolate_factor = as.factor(chocolate))
+
+# Observe the structure of your data.frame
+str(candy_df)
+```
+
+But maybe we aren't all that interested in each of these candy attributes 
+separately. Instead, maybe we think that having more candy attributes might be 
+related to some of our other variables, such as how winning the candy was. 
+Or maybe we think that candy that contains chocolate will have higher average 
+win percentages than candy without chocolate. We can use tidyverse functions to 
+prepare the data to ask these questions.
 
 First, lets create a variable that adds all the possible candy attributes 
 together for each candy. We will use the `rowwise()` and `mutate()` functions 
-which comes from the [dplyr](https://dplyr.tidyverse.org/index.html) package. 
+which comes from the dplyr package. 
 ```{r}
 # Sum candy attributes
 candy_df <- candy_df |>
@@ -146,7 +162,7 @@ candy_chocolatevsfruity_df <- candy_df |>
 head(candy_chocolatevsfruity_df)
 ```
 
-Next, I am going to use `group_by()` from dplyr to find the averaage win percent
+Next, I am going to use `group_by()` from dplyr to find the average win percent
 for chocolate vs fruity candy.
 ```{r}
 candy_chocolatevsfruity_df <- candy_chocolatevsfruity_df |>
@@ -175,7 +191,7 @@ candy_chocolatevsfruity_df |>
   summarise(n())
 ```
 
-Now let's check the correlations amongst our variables. I am going to use the
+Now let's check the correlations between our variables. I am going to use the
 `rcorr()` function from Hmisc.
 ```{r}
 rcorr(as.matrix(candy_df |> select(11:14), type = "pearson"))
@@ -189,7 +205,7 @@ descriptive data.
 ggpairs(candy_df |> select(11:14), progress = FALSE)
 ```
 
-If you really wanted to focus on on particular relation, such as the relation 
+If you really wanted to focus on a particular relation, such as the relation 
 between number of candy attributes and win percentage, you might instead use
 `ggplot()` from the ggplot2 package in tidyverse.
 ```{r}
@@ -226,7 +242,7 @@ We can run a t-test to see if chocolate or fruity candy has higher win percents.
 with(candy_chocolatevsfruity_df, t.test(winpercent~type))
 ```
 
-We can make a bar graph to visulalize this difference. I am going to use the
+We can make a bar graph to visualize this difference. I am going to use the
 Rmisc package to calculate error bars for the figure.
 ```{r}
 library(Rmisc)
@@ -251,7 +267,7 @@ ggplot(candy_chocolatevsfruitysummary_df, aes(type, winpercent, fill = type)) +
 ```
 
 Maybe we decide this is the story we really want to tell: the superiority of 
-chocolate vs fruity candies. We can dress up this figure to make it publication
+chocolate over fruity candies. We can dress up this figure to make it publication
 ready by adding more informative labels.
 ```{r}
 candy_figure <- ggplot(candy_chocolatevsfruitysummary_df, 
